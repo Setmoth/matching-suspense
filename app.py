@@ -126,6 +126,7 @@ def register():
         else:
             # Check if username exists in finance.db
             rows = queryUserName()
+            print ("row", rows)
             if len(rows) == 1:
                 errorMessage = errorRegisterUserName()
                 return apology(errorMessage[0], errorMessage[1])
