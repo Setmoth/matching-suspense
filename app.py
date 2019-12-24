@@ -119,7 +119,7 @@ def quote():
 def register():
     """Register user"""
     
-    print("Register User")
+    print(">>>>> Register User <<<<<")
 
     if request.method == "POST":
         # Check username
@@ -129,7 +129,7 @@ def register():
         else:
             # Check if username exists in database
             rows = queryUserName()
-            print ("row", rows)
+            print (">>>>> row <<<<<", rows)
             if len(rows) == 1:
                 errorMessage = errorRegisterUserName()
                 return apology(errorMessage[0], errorMessage[1])
@@ -223,7 +223,9 @@ def errorPasswordsNoMatch():
 def queryUserName():
     rows = db.execute("SELECT * FROM users WHERE username = :username",
                           {"username": request.form.get("username")})
-    print("rows in queryUserName", rows)
+    for row in db:
+        print(">>>>> row <<<<<", row)    
+
     return rows
 #####
 # conn = sqlite3.connect('test.db')    
