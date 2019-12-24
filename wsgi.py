@@ -1,1 +1,2 @@
-app = Flask(__name__)()
+import index 
+app = index()
