@@ -3,7 +3,7 @@
 import sqlite3
 import csv
 
-from flask import Flask, flash, redirect, render_template, request, session
+from Flask import Flask, flash, redirect, render_template, request, session
 from flask_session.__init__ import Session
 from tempfile import mkdtemp
 from werkzeug.exceptions import default_exceptions, HTTPException, InternalServerError
