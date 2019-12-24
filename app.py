@@ -82,8 +82,6 @@ def login():
         rows = db.execute("SELECT * FROM users WHERE username = :username",
                           username=request.form.get("username"))
 
-        print("rows", rows)
-
         # Ensure username exists and password is correct
         if len(rows) != 1 or not check_password_hash(rows[0]["hash"], request.form.get("password")):
             return apology("invalid username and/or password", 403)
@@ -146,7 +144,7 @@ def register():
             errorMessage = errorPasswordsNoMatch()
             return apology(errorMessage[0], errorMessage[1])
 
-        # Store username & password in finance.db
+        # Store username & password in database
         # Hash password
         password = request.form.get("password")
         hashedPassword = generate_password_hash(password)
@@ -158,6 +156,9 @@ def register():
 
         # Store session-id to login automatically
         rows = queryUserName()
+
+        print("rows", rows)
+
         session["user_id"] = rows[0]["id"]
         flash('You were successfully registered')
         return redirect("/")
