@@ -221,9 +221,9 @@ def errorPasswordsNoMatch():
 
 
 def queryUserName():
-    sqlite_query = '''SELECT * FROM users WHERE username = %(username)''',
-                          {'username': request.form.get("username")}
-    rows = db.execute(sqlite_query)
+    # sqlite_query = '''SELECT * FROM users WHERE username = %(username)''', {'username': request.form.get("username")}
+    rows = db.execute('''SELECT * FROM users WHERE username = %(username)''', 
+                        {'username': request.form.get("username")})
 
     records = db.fetchall()
     for row in records:
