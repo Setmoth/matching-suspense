@@ -63,6 +63,7 @@ def history():
 @app.route("/login", methods=["GET", "POST"])
 def login():
     """Log user in"""
+    print(">>>>> Log user in <<<<<")
 
     # Forget any user_id
     session.clear()
@@ -222,8 +223,12 @@ def errorPasswordsNoMatch():
 
 def queryUserName():
     # sqlite_query = '''SELECT * FROM users WHERE username = %(username)''', {'username': request.form.get("username")}
-    rows = db.execute('''SELECT * FROM users WHERE username = %(username)''', 
-                        {'username': request.form.get("username")})
+    print(">>>>> queryUserName <<<<<")
+    providedUsername = request.form.get("username")
+    
+    print("providedUsername", providedUsername)
+
+    rows = db.execute('''SELECT * FROM users WHERE username = %(username)s''', {'username': providedUsername})
 
     records = db.fetchall()
     for row in records:
