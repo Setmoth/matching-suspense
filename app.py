@@ -1,4 +1,5 @@
 import os
+import sys
 
 import sqlite3
 import csv
@@ -36,13 +37,15 @@ Session(app)
 
 # Configure CS50 Library to use SQLite database
 #db = SQL("sqlite:///finance.db")
+print(">>>>> HELLO WORLD >>>>>")
 db = sqlite3.connect('db/matching.db')
 
 
 @app.route("/")
 @login_required
 def index():
-    """Show amounts to be mathched"""
+    """Show amounts to be matched"""
+    print(">>>>> index <<<<<")
     return apology("TODO")
 
 
@@ -80,15 +83,21 @@ def login():
             return apology("must provide password", 403)
 
         # Query database for username
-        rows = db.execute("SELECT * FROM users WHERE username = :username",
-                          username=request.form.get("username"))
+        cursor = db.cursor()
+        params = (request.form.get("username"),)
+        rowid = cursor.execute("""SELECT rowid, * FROM users WHERE username = ?;""", params)
+        
+        print("rowid", rowid)
+        print("cursor.fetchone", cursor.fetchone)
+        print("check_password_hash", check_password_hash(rowid, request.form.get("password")))                  
 
         # Ensure username exists and password is correct
-        if len(rows) != 1 or not check_password_hash(rows[0]["hash"], request.form.get("password")):
+        # if cursor.fetchone() or not check_password_hash(rows[0]["hash"], request.form.get("password")):
+        if cursor.fetchone() or not check_password_hash(rowid, request.form.get("password")):
             return apology("invalid username and/or password", 403)
 
         # Remember which user has logged in
-        session["user_id"] = rows[0]["id"]
+        session["user_id"] = rowid
 
         # Redirect user to home page
         return redirect("/")
@@ -129,11 +138,24 @@ def register():
             return apology(errorMessage[0], errorMessage[1])
         else:
             # Check if username exists in database
-            rows = queryUserName()
-            print (">>>>> row <<<<<", rows)
-            if len(rows) == 1:
+            # sqliteConnection = sqlite3.connect('db/matching.db')
+            cursor = db.cursor()
+            
+            #print("Connected to SQLite")
+            
+            sqlite_insert_with_param = """SELECT * FROM users
+                                            WHERE username = ?;"""
+
+            data_tuple = (request.form.get("username"),)
+            print("data_tuple", data_tuple)
+            cursor.execute(sqlite_insert_with_param, data_tuple)
+
+            print("cursor.fetchone", cursor.fetchone())
+
+            if cursor.fetchone():
                 errorMessage = errorRegisterUserName()
-                return apology(errorMessage[0], errorMessage[1])
+                return apology(errorMessage[0], errorMessage[1])     
+
         # Check if a password has been provided
         if not request.form.get("password"):
             errorMessage = errorPassword()
@@ -157,14 +179,17 @@ def register():
         username = request.form.get("username")
 
         params = (username, hashedPassword)
-        db.execute("INSERT INTO users (username, hash) VALUES (?, ?)", params)
+        cursor = db.cursor()
+        cursor.execute('''INSERT INTO users(username, hash) VALUES(?, ?)''', params)
+        db.commit()
 
-        # Store session-id to login automatically
-        rows = queryUserName()
+        params = (username,)
+        rowid = cursor.execute("""SELECT rowid, * FROM users WHERE username = ?;""", params)
+        
+        print("rowid", rowid)
 
-        print("rows", rows)
-
-        session["user_id"] = rows[0]["id"]
+        session["user_id"] = rowid
+        # session["user_id"] = rows[0]["id"]
         flash('You were successfully registered')
         return redirect("/")
     else:
@@ -222,18 +247,24 @@ def errorPasswordsNoMatch():
 
 
 def queryUserName():
-    # sqlite_query = '''SELECT * FROM users WHERE username = %(username)''', {'username': request.form.get("username")}
     print(">>>>> queryUserName <<<<<")
-    providedUsername = request.form.get("username")
+
+    providedUsername = (request.form.get("username"),)
     
-    print("providedUsername", providedUsername)
+    print(">>>>> providedUsername <<<<<", providedUsername)
 
-    rows = db.execute('''SELECT * FROM users WHERE username = %(username)s''', {'username': providedUsername})
-
-    records = db.fetchall()
-    for row in records:
-        print(">>>>> row <<<<<", row)    
+    cursor = db.cursor()
+    rows = cursor.execute('''SELECT * FROM users WHERE username = ?''', providedUsername)
+    # db.commit()
+    
+    # rows = cursor.execute("""SELECT * FROM users WHERE username = %(username)s""", {'username': providedUsername})
+    #print(fetchone())
+    print("rows", rows)
+    #rows = cursor.fetchall()
+    # for row in cursor:
+        # print(">>>>> Hello row <<<<<", row)
 
     return rows
+
 #####
 # conn = sqlite3.connect('test.db')    
