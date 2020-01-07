@@ -83,24 +83,36 @@ def login():
             return apology("must provide password", 403)
 
         # Query database for username
+        print(">>>>> Query DB <<<<<") 
+
         cursor = db.cursor()
         params = (request.form.get("username"),)
-        rowid = cursor.execute("""SELECT rowid, * FROM users WHERE username = ?;""", params)
-        
-        print("rowid", rowid)
-        print("cursor.fetchone", cursor.fetchone)
-        print("check_password_hash", check_password_hash(rowid, request.form.get("password")))                  
+        cursor.execute('''SELECT rowid, * FROM users WHERE username = ?;''', params)
+        rows = cursor.fetchall()
 
-        # Ensure username exists and password is correct
-        # if cursor.fetchone() or not check_password_hash(rows[0]["hash"], request.form.get("password")):
-        if cursor.fetchone() or not check_password_hash(rowid, request.form.get("password")):
+        print("lengte", len(rows))
+
+        if len(rows) == 0:
+            print(">>>>> EMPTY ROW <<<<<")   
             return apology("invalid username and/or password", 403)
 
-        # Remember which user has logged in
-        session["user_id"] = rowid
+        #rows = cursor.fetchall()   
+        for row in rows:
+            # Ensure username exists and password is correct
+            print(">>>>> Ensure username exists and password is correct <<<<<")   
 
-        # Redirect user to home page
-        return redirect("/")
+            if cursor.fetchone() or not check_password_hash(row[2], request.form.get("password")):
+                return apology("invalid username and/or password", 403) 
+
+            # Remember which user has logged in
+            print("rowID login", row[0])
+            session["user_id"] = row[0]
+
+            print(">>>>> Redirect user to home page <<<<<")
+            # Redirect user to home page
+            welcomeMessage = "Welcome back " + request.form.get("username")
+            flash(welcomeMessage)
+            return redirect("/")
 
     # User reached route via GET (as by clicking a link or via redirect)
     else:
@@ -184,14 +196,20 @@ def register():
         db.commit()
 
         params = (username,)
-        rowid = cursor.execute("""SELECT rowid, * FROM users WHERE username = ?;""", params)
-        
-        print("rowid", rowid)
+        #rowid = cursor.execute('''SELECT rowid, * FROM users WHERE username = ?;''', params)
+        #cursor = db.cursor()
+        #params = (request.form.get("username"),)
+        cursor.execute('''SELECT rowid, * FROM users WHERE username = ?;''', params)
+        rows = cursor.fetchall()
 
-        session["user_id"] = rowid
-        # session["user_id"] = rows[0]["id"]
-        flash('You were successfully registered')
-        return redirect("/")
+        if len(rows) == 0:
+            print(">>>>> EMPTY ROW <<<<<")   
+            return apology("Database exceptions", 500)
+
+        for row in rows:
+            session["user_id"] = row[0]
+            flash('You were successfully registered')
+            return redirect("/")
     else:
         return render_template("register.html")
 
