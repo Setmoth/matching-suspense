@@ -46,27 +46,43 @@ db = sqlite3.connect('db/matching.db')
 def index():
     """Show amounts to be matched"""
     print(">>>>> index <<<<<")
+    """Handle requests for / via GET (and POST)"""
     return apology("TODO")
 
 
 @app.route("/buy", methods=["GET", "POST"])
 @login_required
 def buy():
+    print(">>>>> request.method BUY <<<<<", request.method)
     """Buy shares of stock"""
     return apology("TODO")
 
 
-@app.route("/history")
+@app.route("/import", methods=["GET", "POST"])
 @login_required
-def history():
-    """Show history of transactions"""
-    return apology("TODO")
+def importCSV():
+    """Import data using a csv-file"""
+    print(">>>>> importCSV <<<<<")
+    print(">>>>> request.method IMPORT <<<<<", request.method)
+    if request.method == "POST":
+        print(">>>>> POST <<<<<", request.method)
+        # Read files
+        if not request.files["file1"]:
+            abort(400, "missing import file")
+        try:
+            file1 = request.files["file1"].read().decode("utf-8")
+            print(">>>>> Stored in DB <<<<<")
+        except Exception:
+            abort(400, "invalid file")
+    else:
+        print(">>> /GET <<<")
+        return render_template("login.html")   
 
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
     """Log user in"""
-    print(">>>>> Log user in <<<<<")
+    print(">>>>> Log user in <<<<<", request.method)
 
     # Forget any user_id
     session.clear()

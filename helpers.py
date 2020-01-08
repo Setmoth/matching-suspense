@@ -1,5 +1,5 @@
 import os
-#import requests
+import requests
 import urllib.parse
 
 from flask import redirect, render_template, request, session
@@ -33,19 +33,6 @@ def login_required(f):
             return redirect("/login")
         return f(*args, **kwargs)
     return decorated_function
-
-
-    # Parse response
-    try:
-        quote = response.json()
-        return {
-            "name": quote["companyName"],
-            "price": float(quote["latestPrice"]),
-            "symbol": quote["symbol"]
-        }
-    except (KeyError, TypeError, ValueError):
-        return None
-
 
 def eur(value):
     """Format value as USD."""
