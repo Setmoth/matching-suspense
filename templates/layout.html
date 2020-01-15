@@ -38,6 +38,7 @@
                         <li class="nav-item"><a class="nav-link" href="/buy">Buy</a></li>
                         <li class="nav-item"><a class="nav-link" href="/sell">Sell</a></li>
                         <li class="nav-item"><a class="nav-link" href="/import">Import</a></li>
+                        <li class="nav-item"><a class="nav-link" href="/faq">FAQ</a></li>
                     </ul>
                     <ul class="navbar-nav ml-auto mt-2">
                         <li class="nav-item"><a class="nav-link" href="/logout">Log Out</a></li>
@@ -60,12 +61,41 @@
         {% endif %}
 
         <main class="container p-5">
-            {% block main %}{% endblock %}
+            {% block main %}
+            <table id="roster" class="table table-striped" style="width:100%">
+                  <thead>
+                    <tr class="text-left">
+                      <th>Transaction Date</th>
+                      <th>Valuta</th>
+                      <th>CR/DB</th>
+                      <th>Amount</th>
+                      <th>Payment Method</th>
+                      <th>Description</th>
+                      <th>Reference</th>
+                      <th>Processed</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                      {% for rows in rows %}
+                         <tr class="text-left">
+                            <td>{{ rows[3] }}</td>
+                            <td>{{ rows[4] }}</td>
+                            <td>{{ rows[5] }}</td>
+                            <td>{{ rows[6] }}</td>
+                            <td>{{ rows[10] }}</td>
+                            <td>{{ rows[11] }}</td>
+                            <td>{{ rows[16] }}</td> <!-- eur ... -->
+                            <td>{{ rows[18] }}</td>
+                         </tr>
+                      {% endfor %}
+                   </tbody>
+                </table>
+            {% endblock %}
         </main>
 
 
         <footer class="small text-center text-muted">
-            Version - 2020.08.01-002
+            Version - 2020.01.15-000
         </footer>
 
     </body>

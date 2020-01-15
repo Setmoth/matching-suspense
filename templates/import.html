@@ -5,7 +5,7 @@
 {% endblock %}
 
 {% block main %}
-    <form action="/import" method="post">
+    <!-- <form action="/import" method="post">
         <div class="form-group">
             <input autocomplete="off" autofocus class="form-control" name="symbol" placeholder="Symbol" type="text">
         </div>
@@ -13,13 +13,14 @@
             <input autocomplete="off" autofocus class="form-control" name="shares" placeholder="Shares" type="number" min = "1">
         </div>
         <button class="btn btn-primary" type="submit">Import</button>
-    </form>
+    </form> -->   
 
- <!--   <p>Select your csv-file to import suspense-accounts to be matched</p>
+    <!-- <p>Select your csv-file to import suspense-accounts to be matched</p> -->
     <br>
     <form action="/import" enctype="multipart/form-data" method="post">
-        <input type="file" name="file">
+        <input class="btn btn-primary" type="file" name="fileX">
         <br>
-        <button type="submit">Run Import</button>
-    </form> -->
+        <br>
+        <button class="btn btn-primary" type="submit">Import</button>
+    </form>
 {% endblock %}

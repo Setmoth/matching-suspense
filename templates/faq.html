@@ -1,0 +1,17 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Import
+{% endblock %}
+
+{% block main %}
+<p>Q: What CSV-encoding is used?</p>
+<p>A: utf-8 & ascii are tested</p>
+<br>
+<p>Q: What is the layout of the CSV?</p>
+<p>A: account number / transaction date / valuta code / credit debet / amount / counter account /  counter account holder / valuta date / payment method / description / payment type / authorization number /  collector ID / address / reference / book date </p>
+<p>Reference is a unique identifier</p>
+<br>
+<p>The first two records are considered as documentation and headerinfo</p>
+
+{% endblock %}

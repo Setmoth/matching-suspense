@@ -1,8 +1,12 @@
 import os
 import sys
+import io
 
 import sqlite3
 import csv
+import pandas as pd
+ 
+# import codecs
 
 from flask import Flask, flash, redirect, render_template, request, session
 from flask_session.__init__ import Session
@@ -11,6 +15,7 @@ from werkzeug.exceptions import default_exceptions, HTTPException, InternalServe
 from werkzeug.security import check_password_hash, generate_password_hash
 
 from helpers import apology, login_required, eur
+
 
 # Configure application
 app = Flask(__name__)
@@ -46,8 +51,16 @@ db = sqlite3.connect('db/matching.db')
 def index():
     """Show amounts to be matched"""
     print(">>>>> index <<<<<")
+    print(">>>>> Query DB <<<<<") 
+
+    cursor = db.cursor()
+    params = (session["user_id"],)
+    cursor.execute('''SELECT rowid, * FROM import WHERE userid = ?;''', params)
+    rows = cursor.fetchall()
+    print(rows)
+    return render_template("layout.html", rows=rows)
     """Handle requests for / via GET (and POST)"""
-    return apology("TODO")
+    #return apology("TODO")
 
 
 @app.route("/buy", methods=["GET", "POST"])
@@ -64,20 +77,36 @@ def importCSV():
     """Import data using a csv-file"""
     print(">>>>> importCSV <<<<<")
     print(">>>>> request.method IMPORT <<<<<", request.method)
+    flashMessage = "howdy, partner"
     if request.method == "POST":
         print(">>>>> POST <<<<<", request.method)
-        # Read files
-        if not request.files["file1"]:
-            abort(400, "missing import file")
+        # Read file
+        if not request.files["fileX"]:
+            flashMessage = 'missing import file' 
+            flash(flashMessage, 'danger')
+            return render_template("import.html") 
         try:
-            file1 = request.files["file1"].read().decode("utf-8")
-            print(">>>>> Stored in DB <<<<<")
-        except Exception:
-            abort(400, "invalid file")
+            print(">>>>> TRY <<<<<")
+            # fileX = request.files["fileX"].read().decode("utf-8")
+            # fileX = request.files["fileX"].read().decode("utf-8").split('\n')  #each row is one record
+            #fileX = request.files["fileX"]
+
+            data = pd.read_csv(request.files["fileX"], sep=";")
+
+            print(">>>>> PARSING DONE <<<<<")
+            
+            processImport(data)
+            
+            flashMessage = 'Transactions are stored, you can now process them'
+        except Exception as e:
+            print(">>>>> exception <<<<<", e)
+            flashMessage = 'invalid file'
+        flash(flashMessage, 'danger')
+        return redirect("/")      
     else:
         print(">>> /GET <<<")
-        return render_template("login.html")   
-
+        flash('Select your csv-file to Import the suspense-accounts to be matched') 
+        return render_template("import.html")   
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
@@ -126,8 +155,8 @@ def login():
 
             print(">>>>> Redirect user to home page <<<<<")
             # Redirect user to home page
-            welcomeMessage = "Welcome back " + request.form.get("username")
-            flash(welcomeMessage)
+            flashMessage = "Welcome back " + request.form.get("username")
+            flash(flashMessage)
             return redirect("/")
 
     # User reached route via GET (as by clicking a link or via redirect)
@@ -149,7 +178,8 @@ def logout():
 @app.route("/quote", methods=["GET", "POST"])
 @login_required
 def quote():
-    """Get stock quote."""
+    """View suspense accounts"""
+    
     return apology("TODO")
 
 
@@ -236,6 +266,12 @@ def sell():
     """Sell shares of stock"""
     return apology("TODO")
 
+@app.route("/faq")
+@login_required
+def faq():
+    """Show faqs"""
+    return render_template("faq.html")
+
 
 def errorhandler(e):
     """Handle error"""
@@ -243,6 +279,65 @@ def errorhandler(e):
         e = InternalServerError()
     return apology(e.name, e.code)
 
+def processImport(data):
+    # for each record store an entry in database (id+key shoul be unique)
+    print(">>>>> HELLO IMPORT <<<<<")
+    
+    rowIndex = 14
+
+    # iterate over rows with iterrows()
+    for index, row in data.iterrows():
+         # access data using column names
+         #print(index, row['Rekeningnummer'], row['Transactiedatum'])
+         # Skip headers
+        if row[rowIndex] == '':
+            print("Do nothing")
+        else:
+            csvAccountNumber = row[0]
+            csvTXDate = row[1]
+            csvValutaCode = row[2]
+            csvCreditDebit = row[3]
+            csvAmount = row[4]
+            csvContraAccount = row[5]
+            csvContraAccountName = row[6]
+            csvValutaDate = row[7]
+            csvPaymentMethod = row[8]
+            csvDescription = row[9]
+            csvPaymentType = row[10]
+            csvAuthorisationNumber = row[11]
+            csvAddress = row[12]
+            csvPayeeID = row[13]
+            csvReference = row[14]
+            csvEntryDate = row[15]
+            processed = 'N'
+
+
+            #for row in data:
+            params = (session["user_id"], csvAccountNumber, csvTXDate, csvValutaCode, csvCreditDebit, csvAmount, csvContraAccount,
+                        csvContraAccountName, csvValutaDate, csvPaymentMethod, csvDescription, csvPaymentType,
+                        csvAuthorisationNumber, csvPayeeID, csvAddress, csvReference, csvEntryDate, processed)
+            print(">>>>> params >>>>>", params)
+
+            cursor = db.cursor()
+            cursor.execute('''INSERT INTO import(userid,
+                                                account_number, 
+                                                tx_date, 
+                                                valuta_code, 
+                                                credit_debit, 
+                                                amount, 
+                                                contra_account, 
+                                                contra_account_name, 
+                                                valuta_date,
+                                                payment_method,
+                                                description,
+                                                payment_type,
+                                                authorisation_number,
+                                                address,
+                                                payee_id,
+                                                reference,
+                                                entry_date,
+                                                processed) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''', params)
+            db.commit()
 
 # Listen for errors
 for code in default_exceptions:
@@ -299,6 +394,3 @@ def queryUserName():
         # print(">>>>> Hello row <<<<<", row)
 
     return rows
-
-#####
-# conn = sqlite3.connect('test.db')    
