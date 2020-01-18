@@ -46,31 +46,34 @@ print(">>>>> HELLO WORLD >>>>>")
 db = sqlite3.connect('db/matching.db')
 
 
-@app.route("/")
+@app.route("/", methods=["GET", "POST"])
 @login_required
 def index():
     """Show amounts to be matched"""
     print(">>>>> index <<<<<")
     print(">>>>> Query DB <<<<<") 
-
-    cursor = db.cursor()
-    params = (session["user_id"],)
-    cursor.execute('''SELECT rowid, * FROM import WHERE userid = ?;''', params)
-    rows = cursor.fetchall()
-    print(rows)
-    return render_template("layout.html", rows=rows)
-    """Handle requests for / via GET (and POST)"""
-    #return apology("TODO")
-
-
-@app.route("/buy", methods=["GET", "POST"])
-@login_required
-def buy():
-    print(">>>>> request.method BUY <<<<<", request.method)
-    """Buy shares of stock"""
-    return apology("TODO")
-
-
+    if request.method == "POST":
+        print(">>>>> POST processedFlag <<<<<", request.method)
+        processedFlag = request.form.getlist("checkbox")
+        print(">>>>> processedFlag <<<<<", processedFlag)
+        for rows in processedFlag:
+            print(">>>>> processedFlagLoop <<<<<", rows)
+            cursor = db.cursor()
+            params = ("Y", session["user_id"], rows)
+            print(">>>>> params <<<<<", params)
+            cursor.execute('''UPDATE import SET processed = ? where userid = ? AND reference = ?''', params)
+            db.commit()
+        flash('Mark the suspense-accounts that are matched') 
+        return render_template("layout.html")         
+    else:
+        print(">>> /GET <<<")
+        cursor = db.cursor()
+        params = (session["user_id"],)
+        cursor.execute('''SELECT rowid, * FROM import WHERE userid = ? AND processed = 'N' ORDER BY amount;''', params)
+        rows = cursor.fetchall()
+        #print(rows)
+        return render_template("layout.html", rows=rows)
+        
 @app.route("/import", methods=["GET", "POST"])
 @login_required
 def importCSV():
@@ -174,15 +177,6 @@ def logout():
     # Redirect user to login form
     return redirect("/")
 
-
-@app.route("/quote", methods=["GET", "POST"])
-@login_required
-def quote():
-    """View suspense accounts"""
-    
-    return apology("TODO")
-
-
 @app.route("/register", methods=["GET", "POST"])
 def register():
     """Register user"""
@@ -259,19 +253,11 @@ def register():
     else:
         return render_template("register.html")
 
-
-@app.route("/sell", methods=["GET", "POST"])
-@login_required
-def sell():
-    """Sell shares of stock"""
-    return apology("TODO")
-
 @app.route("/faq")
 @login_required
 def faq():
     """Show faqs"""
     return render_template("faq.html")
-
 
 def errorhandler(e):
     """Handle error"""
@@ -290,54 +276,62 @@ def processImport(data):
          # access data using column names
          #print(index, row['Rekeningnummer'], row['Transactiedatum'])
          # Skip headers
-        if row[rowIndex] == '':
-            print("Do nothing")
+        if row[rowIndex] == '' or row[rowIndex] == 'Referentie':
+            print("Do nothing", row[rowIndex])
         else:
-            csvAccountNumber = row[0]
-            csvTXDate = row[1]
-            csvValutaCode = row[2]
-            csvCreditDebit = row[3]
-            csvAmount = row[4]
-            csvContraAccount = row[5]
-            csvContraAccountName = row[6]
-            csvValutaDate = row[7]
-            csvPaymentMethod = row[8]
-            csvDescription = row[9]
-            csvPaymentType = row[10]
-            csvAuthorisationNumber = row[11]
-            csvAddress = row[12]
-            csvPayeeID = row[13]
-            csvReference = row[14]
-            csvEntryDate = row[15]
-            processed = 'N'
-
-
-            #for row in data:
-            params = (session["user_id"], csvAccountNumber, csvTXDate, csvValutaCode, csvCreditDebit, csvAmount, csvContraAccount,
-                        csvContraAccountName, csvValutaDate, csvPaymentMethod, csvDescription, csvPaymentType,
-                        csvAuthorisationNumber, csvPayeeID, csvAddress, csvReference, csvEntryDate, processed)
-            print(">>>>> params >>>>>", params)
-
+            #check if combination ID/REFERENCE already exists
+            params = (session["user_id"],row[rowIndex])
+            print(">>>>> Do I Exist? ", row[rowIndex])
             cursor = db.cursor()
-            cursor.execute('''INSERT INTO import(userid,
-                                                account_number, 
-                                                tx_date, 
-                                                valuta_code, 
-                                                credit_debit, 
-                                                amount, 
-                                                contra_account, 
-                                                contra_account_name, 
-                                                valuta_date,
-                                                payment_method,
-                                                description,
-                                                payment_type,
-                                                authorisation_number,
-                                                address,
-                                                payee_id,
-                                                reference,
-                                                entry_date,
-                                                processed) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''', params)
-            db.commit()
+            cursor.execute('''SELECT rowid, * FROM import WHERE userid = ? AND reference = ?''', params)
+            rows = cursor.fetchone()
+            print("REFEXI", rows)
+            if not rows:
+                csvAccountNumber = row[0]
+                csvTXDate = row[1]
+                csvValutaCode = row[2]
+                csvCreditDebit = row[3]
+                csvAmount = row[4]
+                csvContraAccount = row[5]
+                csvContraAccountName = row[6]
+                csvValutaDate = row[7]
+                csvPaymentMethod = row[8]
+                csvDescription = row[9]
+                csvPaymentType = row[10]
+                csvAuthorisationNumber = row[11]
+                csvAddress = row[12]
+                csvPayeeID = row[13]
+                csvReference = row[14]
+                csvEntryDate = row[15]
+                processed = 'N'
+
+
+                #for row in data:
+                params = (session["user_id"], csvAccountNumber, csvTXDate, csvValutaCode, csvCreditDebit, csvAmount, csvContraAccount,
+                            csvContraAccountName, csvValutaDate, csvPaymentMethod, csvDescription, csvPaymentType,
+                            csvAuthorisationNumber, csvPayeeID, csvAddress, csvReference, csvEntryDate, processed)
+                print(">>>>> params >>>>>", params)
+
+                cursor = db.cursor()
+                cursor.execute('''INSERT INTO import(userid,
+                                                    account_number, 
+                                                    tx_date, 
+                                                    valuta_code, 
+                                                    credit_debit, 
+                                                    amount, 
+                                                    contra_account, 
+                                                    contra_account_name, 
+                                                    valuta_date,
+                                                    payment_method,
+                                                    description,
+                                                    payment_type,
+                                                    authorisation_number,
+                                                    address,
+                                                    payee_id,
+                                                    reference,
+                                                    entry_date,
+                                                    processed) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''', params)
+                db.commit()
 
 # Listen for errors
 for code in default_exceptions:

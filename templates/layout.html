@@ -34,9 +34,6 @@
             <div class="collapse navbar-collapse" id="navbar">
                 {% if session.user_id %}
                     <ul class="navbar-nav mr-auto mt-2">
-                        <li class="nav-item"><a class="nav-link" href="/quote">Quote</a></li>
-                        <li class="nav-item"><a class="nav-link" href="/buy">Buy</a></li>
-                        <li class="nav-item"><a class="nav-link" href="/sell">Sell</a></li>
                         <li class="nav-item"><a class="nav-link" href="/import">Import</a></li>
                         <li class="nav-item"><a class="nav-link" href="/faq">FAQ</a></li>
                     </ul>
@@ -62,10 +59,12 @@
 
         <main class="container p-5">
             {% block main %}
-            <table id="roster" class="table table-striped" style="width:100%">
+            <form action="/" method="post" name="movie_list">   
+                <table id="roster" class="table table-striped" style="width:100%">
                   <thead>
                     <tr class="text-left">
-                      <th>Transaction Date</th>
+                      <th>Processed</th>  
+                      <th>Date</th>
                       <th>Valuta</th>
                       <th>CR/DB</th>
                       <th>Amount</th>
@@ -78,24 +77,29 @@
                   <tbody>
                       {% for rows in rows %}
                          <tr class="text-left">
-                            <td>{{ rows[3] }}</td>
-                            <td>{{ rows[4] }}</td>
-                            <td>{{ rows[5] }}</td>
-                            <td>{{ rows[6] }}</td>
-                            <td>{{ rows[10] }}</td>
-                            <td>{{ rows[11] }}</td>
-                            <td>{{ rows[16] }}</td> <!-- eur ... -->
-                            <td>{{ rows[18] }}</td>
+                            <td><input type="checkbox" id="{{ checkbox }}" name="checkbox" value="{{ rows[16] }}"></td>
+                            <!-- <label for="{{ checkbox }}">{{ "Y" }}</label> -->
+                            <td>{{ rows[3] }}</td> <!-- Processed -->
+                            <td>{{ rows[4] }}</td> <!-- Date -->
+                            <td>{{ rows[5] }}</td> <!-- Valuta -->
+                            <td>{{ rows[6] }}</td> <!-- CR/DB -->
+                            <td>{{ rows[10] | eur }}</td> <!-- Amount-->
+                            <td>{{ rows[11] }}</td> <!-- payment description -->
+                            <td>{{ rows[16] }}</td> <!-- reference -->
+                            <td>{{ rows[18] }}</td> <!-- processed -->
                          </tr>
                       {% endfor %}
-                   </tbody>
+                      <br>
+                  </tbody>
                 </table>
+                <button class="btn btn-primary" type="submit">Mark as Processed</button>
+            </form>
             {% endblock %}
         </main>
 
 
         <footer class="small text-center text-muted">
-            Version - 2020.01.15-000
+            Version - 2020.01.18-000
         </footer>
 
     </body>

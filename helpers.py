@@ -35,5 +35,5 @@ def login_required(f):
     return decorated_function
 
 def eur(value):
-    """Format value as USD."""
+    """Format value as EUR."""
     return f"€{value:,.2f}"
