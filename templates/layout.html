@@ -49,17 +49,21 @@
             </div>
         </nav>
 
-        {% if get_flashed_messages() %}
-            <header>
-                <div class="alert alert-primary border text-center" role="alert">
-                    {{ get_flashed_messages() | join(" ") }}
-                </div>
-            </header>
-        {% endif %}
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <header>
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }} border text-center" role="alert">
+                            <span>{{ message }}</span>
+                        </div>
+                    {% endfor %}
+                </header>
+            {% endif %}
+        {% endwith %}
 
         <main class="container p-5">
             {% block main %}
-            <form action="/" method="post" name="movie_list">   
+            <form action="/" method="post" name="checkbox">   
                 <table id="roster" class="table table-striped" style="width:100%">
                   <thead>
                     <tr class="text-left">
@@ -83,7 +87,7 @@
                             <td>{{ rows[4] }}</td> <!-- Date -->
                             <td>{{ rows[5] }}</td> <!-- Valuta -->
                             <td>{{ rows[6] }}</td> <!-- CR/DB -->
-                            <td>{{ rows[10] | eur }}</td> <!-- Amount-->
+                            <td>{{ rows[10] }}</td> <!-- Amount-->
                             <td>{{ rows[11] }}</td> <!-- payment description -->
                             <td>{{ rows[16] }}</td> <!-- reference -->
                             <td>{{ rows[18] }}</td> <!-- processed -->
@@ -99,7 +103,7 @@
 
 
         <footer class="small text-center text-muted">
-            Version - 2020.01.18-000
+            Version - 2020.01.20-000
         </footer>
 
     </body>

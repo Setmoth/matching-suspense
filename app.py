@@ -6,15 +6,13 @@ import sqlite3
 import csv
 import pandas as pd
  
-# import codecs
-
 from flask import Flask, flash, redirect, render_template, request, session
 from flask_session.__init__ import Session
 from tempfile import mkdtemp
 from werkzeug.exceptions import default_exceptions, HTTPException, InternalServerError
 from werkzeug.security import check_password_hash, generate_password_hash
 
-from helpers import apology, login_required, eur
+from helpers import apology, login_required
 
 
 # Configure application
@@ -30,9 +28,6 @@ def after_request(response):
     response.headers["Expires"] = 0
     response.headers["Pragma"] = "no-cache"
     return response
-
-# Custom filter
-app.jinja_env.filters["eur"] = eur
 
 # Configure session to use filesystem (instead of signed cookies)
 app.config["SESSION_FILE_DIR"] = mkdtemp()
@@ -71,7 +66,6 @@ def index():
         params = (session["user_id"],)
         cursor.execute('''SELECT rowid, * FROM import WHERE userid = ? AND processed = 'N' ORDER BY amount;''', params)
         rows = cursor.fetchall()
-        #print(rows)
         return render_template("layout.html", rows=rows)
         
 @app.route("/import", methods=["GET", "POST"])
@@ -79,36 +73,32 @@ def index():
 def importCSV():
     """Import data using a csv-file"""
     print(">>>>> importCSV <<<<<")
-    print(">>>>> request.method IMPORT <<<<<", request.method)
-    flashMessage = "howdy, partner"
+
     if request.method == "POST":
         print(">>>>> POST <<<<<", request.method)
         # Read file
         if not request.files["fileX"]:
-            flashMessage = 'missing import file' 
+            flashMessage = 'Missing import file' 
             flash(flashMessage, 'danger')
             return render_template("import.html") 
         try:
             print(">>>>> TRY <<<<<")
-            # fileX = request.files["fileX"].read().decode("utf-8")
-            # fileX = request.files["fileX"].read().decode("utf-8").split('\n')  #each row is one record
-            #fileX = request.files["fileX"]
 
             data = pd.read_csv(request.files["fileX"], sep=";")
-
-            print(">>>>> PARSING DONE <<<<<")
             
             processImport(data)
             
-            flashMessage = 'Transactions are stored, you can now process them'
+            flashMessage = 'Transactions are stored, you can now process them' 
+            flashMessageCat = 'succes'
         except Exception as e:
             print(">>>>> exception <<<<<", e)
-            flashMessage = 'invalid file'
-        flash(flashMessage, 'danger')
+            flashMessage = 'Invalid file'
+            flashMessageCat = 'danger'
+        flash(flashMessage, flashMessageCat)
         return redirect("/")      
     else:
         print(">>> /GET <<<")
-        flash('Select your csv-file to Import the suspense-accounts to be matched') 
+        flash('Select your csv-file to import the suspense-accounts to be matched', 'info') 
         return render_template("import.html")   
 
 @app.route("/login", methods=["GET", "POST"])
@@ -124,7 +114,9 @@ def login():
 
         # Ensure username was submitted
         if not request.form.get("username"):
-            return apology("must provide username", 403)
+            flash("must provide username", 'danger')
+            #return flash("must provide username", 'danger')
+            return redirect("/login")
 
         # Ensure password was submitted
         elif not request.form.get("password"):
@@ -158,8 +150,9 @@ def login():
 
             print(">>>>> Redirect user to home page <<<<<")
             # Redirect user to home page
-            flashMessage = "Welcome back " + request.form.get("username")
-            flash(flashMessage)
+            flashMessage = "Welcome back, " + request.form.get("username")
+            #flash(flashMessage, 'error')
+            flash('Hello back', 'error')
             return redirect("/")
 
     # User reached route via GET (as by clicking a link or via redirect)
@@ -186,42 +179,35 @@ def register():
     if request.method == "POST":
         # Check username
         if not request.form.get("username"):
-            errorMessage = errorUserName()
-            return apology(errorMessage[0], errorMessage[1])
+            flash('Please provide a username', 'info')
+            return redirect("/register") 
         else:
             # Check if username exists in database
-            # sqliteConnection = sqlite3.connect('db/matching.db')
             cursor = db.cursor()
             
-            #print("Connected to SQLite")
-            
-            sqlite_insert_with_param = """SELECT * FROM users
-                                            WHERE username = ?;"""
+            params = (request.form.get("username"),)
+            cursor.execute('''SELECT * FROM users WHERE username = ?;''', params)
 
-            data_tuple = (request.form.get("username"),)
-            print("data_tuple", data_tuple)
-            cursor.execute(sqlite_insert_with_param, data_tuple)
+            rows = cursor.fetchone()
 
-            print("cursor.fetchone", cursor.fetchone())
-
-            if cursor.fetchone():
-                errorMessage = errorRegisterUserName()
-                return apology(errorMessage[0], errorMessage[1])     
+            if not rows == None:
+                flash('The username already exists', 'info')
+                return redirect("/register") 
 
         # Check if a password has been provided
         if not request.form.get("password"):
-            errorMessage = errorPassword()
-            return apology(errorMessage[0], errorMessage[1])
+            flash('Please, provide a password', 'info')
+            return redirect("/register") 
 
         # Check if password not less than 6 characters
-        if len(request.form.get("password")) < 6:     
-            errorMessage = errorPasswordLength()
-            return apology(errorMessage[0], errorMessage[1])
+        if len(request.form.get("password")) < 6:
+            flash('Password should be a least 6 characters', 'info')
+            return redirect("/register")
 
         # Check is both password match (password & confirmation)
         if request.form.get("password") != request.form.get("confirmation"):
-            errorMessage = errorPasswordsNoMatch()
-            return apology(errorMessage[0], errorMessage[1])
+            flash('Password don\'t match', 'info')
+            return redirect("/register")            
 
         # Store username & password in database
         # Hash password
@@ -235,20 +221,19 @@ def register():
         cursor.execute('''INSERT INTO users(username, hash) VALUES(?, ?)''', params)
         db.commit()
 
+        # Create and save uses session
         params = (username,)
-        #rowid = cursor.execute('''SELECT rowid, * FROM users WHERE username = ?;''', params)
-        #cursor = db.cursor()
-        #params = (request.form.get("username"),)
         cursor.execute('''SELECT rowid, * FROM users WHERE username = ?;''', params)
         rows = cursor.fetchall()
 
         if len(rows) == 0:
-            print(">>>>> EMPTY ROW <<<<<")   
-            return apology("Database exceptions", 500)
+            print(">>>>> EMPTY ROW <<<<<")
+            flash('Database exceptions', 'danger')   
+            return redirect("/register")   
 
         for row in rows:
             session["user_id"] = row[0]
-            flash('You were successfully registered')
+            flash('You were successfully registered', 'info')
             return redirect("/")
     else:
         return render_template("register.html")
@@ -281,11 +266,9 @@ def processImport(data):
         else:
             #check if combination ID/REFERENCE already exists
             params = (session["user_id"],row[rowIndex])
-            print(">>>>> Do I Exist? ", row[rowIndex])
             cursor = db.cursor()
             cursor.execute('''SELECT rowid, * FROM import WHERE userid = ? AND reference = ?''', params)
             rows = cursor.fetchone()
-            print("REFEXI", rows)
             if not rows:
                 csvAccountNumber = row[0]
                 csvTXDate = row[1]
@@ -310,7 +293,6 @@ def processImport(data):
                 params = (session["user_id"], csvAccountNumber, csvTXDate, csvValutaCode, csvCreditDebit, csvAmount, csvContraAccount,
                             csvContraAccountName, csvValutaDate, csvPaymentMethod, csvDescription, csvPaymentType,
                             csvAuthorisationNumber, csvPayeeID, csvAddress, csvReference, csvEntryDate, processed)
-                print(">>>>> params >>>>>", params)
 
                 cursor = db.cursor()
                 cursor.execute('''INSERT INTO import(userid,
