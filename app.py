@@ -12,7 +12,7 @@ from tempfile import mkdtemp
 from werkzeug.exceptions import default_exceptions, HTTPException, InternalServerError
 from werkzeug.security import check_password_hash, generate_password_hash
 
-from helpers import apology, login_required
+from helpers import apology, login_required, eur
 
 
 # Configure application
@@ -29,6 +29,11 @@ def after_request(response):
     response.headers["Pragma"] = "no-cache"
     return response
 
+
+# Custom filter
+app.jinja_env.filters["eur"] = eur    
+
+
 # Configure session to use filesystem (instead of signed cookies)
 app.config["SESSION_FILE_DIR"] = mkdtemp()
 app.config["SESSION_PERMANENT"] = False
@@ -44,24 +49,21 @@ db = sqlite3.connect('db/matching.db')
 @app.route("/", methods=["GET", "POST"])
 @login_required
 def index():
-    """Show amounts to be matched"""
+    """Show rows to be matched"""
     print(">>>>> index <<<<<")
-    print(">>>>> Query DB <<<<<") 
     if request.method == "POST":
-        print(">>>>> POST processedFlag <<<<<", request.method)
-        processedFlag = request.form.getlist("checkbox")
-        print(">>>>> processedFlag <<<<<", processedFlag)
+        # Process marked rows
+        processedFlag = request.form.getlist("checkbox") 
         for rows in processedFlag:
-            print(">>>>> processedFlagLoop <<<<<", rows)
             cursor = db.cursor()
             params = ("Y", session["user_id"], rows)
-            print(">>>>> params <<<<<", params)
             cursor.execute('''UPDATE import SET processed = ? where userid = ? AND reference = ?''', params)
             db.commit()
-        flash('Mark the suspense-accounts that are matched') 
-        return render_template("layout.html")         
+        flash('Marked rows are processed', 'success') 
+        return redirect("/")
+        #return render_template("layout.html")         
     else:
-        print(">>> /GET <<<")
+        # List rows to be processed
         cursor = db.cursor()
         params = (session["user_id"],)
         cursor.execute('''SELECT rowid, * FROM import WHERE userid = ? AND processed = 'N' ORDER BY amount;''', params)
@@ -75,36 +77,30 @@ def importCSV():
     print(">>>>> importCSV <<<<<")
 
     if request.method == "POST":
-        print(">>>>> POST <<<<<", request.method)
-        # Read file
+        # Read CSV file
         if not request.files["fileX"]:
-            flashMessage = 'Missing import file' 
-            flash(flashMessage, 'danger')
+            flash('Missing import file, please select a CSV-file from your computer', 'danger')
             return render_template("import.html") 
         try:
-            print(">>>>> TRY <<<<<")
-
             data = pd.read_csv(request.files["fileX"], sep=";")
             
             processImport(data)
             
-            flashMessage = 'Transactions are stored, you can now process them' 
-            flashMessageCat = 'succes'
+            flash('Transactions are stored, you can now process them', 'success')
         except Exception as e:
             print(">>>>> exception <<<<<", e)
-            flashMessage = 'Invalid file'
-            flashMessageCat = 'danger'
-        flash(flashMessage, flashMessageCat)
-        return redirect("/")      
+            flash('Invalid file or a database error, send an email to slackbyte8@gmail.com', 'danger')
+        return redirect("/")
     else:
         print(">>> /GET <<<")
         flash('Select your csv-file to import the suspense-accounts to be matched', 'info') 
         return render_template("import.html")   
 
+
 @app.route("/login", methods=["GET", "POST"])
 def login():
     """Log user in"""
-    print(">>>>> Log user in <<<<<", request.method)
+    print(">>>>> Log user in <<<<<")
 
     # Forget any user_id
     session.clear()
@@ -114,13 +110,13 @@ def login():
 
         # Ensure username was submitted
         if not request.form.get("username"):
-            flash("must provide username", 'danger')
-            #return flash("must provide username", 'danger')
-            return redirect("/login")
+            flash("Please, provide your username", 'warning')
+            return render_template("login.html")
 
         # Ensure password was submitted
         elif not request.form.get("password"):
-            return apology("must provide password", 403)
+            flash("Please, provide your password", 'warning')
+            return render_template("login.html")
 
         # Query database for username
         print(">>>>> Query DB <<<<<") 
@@ -130,31 +126,26 @@ def login():
         cursor.execute('''SELECT rowid, * FROM users WHERE username = ?;''', params)
         rows = cursor.fetchall()
 
-        print("lengte", len(rows))
-
+        # User does not exist
         if len(rows) == 0:
-            print(">>>>> EMPTY ROW <<<<<")   
-            return apology("invalid username and/or password", 403)
+            flash("Your username or password is wrong", 'warning') # For security name both so risk of guessing is lower
+            return render_template("login.html")
 
-        #rows = cursor.fetchall()   
+        # Ensure username exists and password is correct
         for row in rows:
-            # Ensure username exists and password is correct
-            print(">>>>> Ensure username exists and password is correct <<<<<")   
-
             if cursor.fetchone() or not check_password_hash(row[2], request.form.get("password")):
-                return apology("invalid username and/or password", 403) 
+                flash("Your username or password is wrong", 'warning') # For security name both so rik of guessing is lower
+                return render_template("login.html")
 
             # Remember which user has logged in
-            print("rowID login", row[0])
             session["user_id"] = row[0]
 
             print(">>>>> Redirect user to home page <<<<<")
             # Redirect user to home page
             flashMessage = "Welcome back, " + request.form.get("username")
             #flash(flashMessage, 'error')
-            flash('Hello back', 'error')
+            flash(flashMessage, 'info')
             return redirect("/")
-
     # User reached route via GET (as by clicking a link or via redirect)
     else:
         return render_template("login.html")
@@ -169,6 +160,7 @@ def logout():
 
     # Redirect user to login form
     return redirect("/")
+
 
 @app.route("/register", methods=["GET", "POST"])
 def register():
@@ -252,17 +244,15 @@ def errorhandler(e):
 
 def processImport(data):
     # for each record store an entry in database (id+key shoul be unique)
-    print(">>>>> HELLO IMPORT <<<<<")
     
-    rowIndex = 14
+    rowIndex = 14 # This is the unique reference
 
     # iterate over rows with iterrows()
     for index, row in data.iterrows():
          # access data using column names
-         #print(index, row['Rekeningnummer'], row['Transactiedatum'])
          # Skip headers
         if row[rowIndex] == '' or row[rowIndex] == 'Referentie':
-            print("Do nothing", row[rowIndex])
+            print("Do nothing")
         else:
             #check if combination ID/REFERENCE already exists
             params = (session["user_id"],row[rowIndex])
@@ -270,11 +260,15 @@ def processImport(data):
             cursor.execute('''SELECT rowid, * FROM import WHERE userid = ? AND reference = ?''', params)
             rows = cursor.fetchone()
             if not rows:
+                # Process data
                 csvAccountNumber = row[0]
                 csvTXDate = row[1]
                 csvValutaCode = row[2]
                 csvCreditDebit = row[3]
                 csvAmount = row[4]
+                # numeric and two digits
+                csvAmount = float(csvAmount.replace(',', '.'))
+                print("csvAmount", csvAmount)
                 csvContraAccount = row[5]
                 csvContraAccountName = row[6]
                 csvValutaDate = row[7]
@@ -287,7 +281,6 @@ def processImport(data):
                 csvReference = row[14]
                 csvEntryDate = row[15]
                 processed = 'N'
-
 
                 #for row in data:
                 params = (session["user_id"], csvAccountNumber, csvTXDate, csvValutaCode, csvCreditDebit, csvAmount, csvContraAccount,

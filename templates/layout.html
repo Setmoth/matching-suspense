@@ -75,7 +75,6 @@
                       <th>Payment Method</th>
                       <th>Description</th>
                       <th>Reference</th>
-                      <th>Processed</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -87,10 +86,9 @@
                             <td>{{ rows[4] }}</td> <!-- Date -->
                             <td>{{ rows[5] }}</td> <!-- Valuta -->
                             <td>{{ rows[6] }}</td> <!-- CR/DB -->
-                            <td>{{ rows[10] }}</td> <!-- Amount-->
+                            <td>{{ rows[10] | eur }}</td> <!-- Amount-->
                             <td>{{ rows[11] }}</td> <!-- payment description -->
                             <td>{{ rows[16] }}</td> <!-- reference -->
-                            <td>{{ rows[18] }}</td> <!-- processed -->
                          </tr>
                       {% endfor %}
                       <br>

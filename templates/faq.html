@@ -9,9 +9,7 @@
 <p>A: utf-8 & ascii are tested</p>
 <br>
 <p>Q: What is the layout of the CSV?</p>
-<p>A: account number / transaction date / valuta code / credit debet / amount / counter account /  counter account holder / valuta date / payment method / description / payment type / authorization number /  collector ID / address / reference / book date </p>
-<p>Reference is a unique identifier</p>
-<br>
-<p>Rows where a Reference is empty will be skipped</p>
+<p>A: account number / transaction date (format 99-99-99) / valuta code - no validation / credit debet (C or D)/ amount / counter account /  counter account holder / valuta date / payment method / description / payment type / authorization number /  collector ID / address / reference / book date </p>
+<p>Reference is a unique identifier, accounts will be imported only, when a unique identifier has been provided</p>
 
 {% endblock %}
