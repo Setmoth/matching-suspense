@@ -76,6 +76,7 @@ def importCSV():
 
     if request.method == "POST":
         # Read CSV file
+        print('>>>>> POST CSV <<<<<')
         if not request.files["fileX"]:
             flash('Missing import file, please select a CSV-file from your computer', 'danger')
             return render_template("import.html") 
