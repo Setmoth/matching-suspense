@@ -48,12 +48,14 @@ def index():
     print(">>>>> index <<<<<")
     if request.method == "POST":
         # Process marked rows
+        print('>>>>> POST marked ROWS <<<<<')
         processedFlag = request.form.getlist("checkbox") 
         for rows in processedFlag:
             cursor = db.cursor()
             params = ("Y", session["user_id"], rows)
             cursor.execute('''UPDATE import SET processed = ? where userid = ? AND reference = ?''', params)
             db.commit()
+        print('>>>>> STORED DB <<<<<')
         flash('Marked rows are processed', 'success') 
         return redirect("/")
         #return render_template("layout.html")         
@@ -79,9 +81,9 @@ def importCSV():
             return render_template("import.html") 
         try:
             data = pd.read_csv(request.files["fileX"], sep=";")
-            
+            print('>>>>> STORE ROWS IN DB<<<<<')
             processImport(data)
-            
+            print('>>>>> DONE STORING ROWS IN DB<<<<<')
             flash('Transactions are stored, you can now process them', 'success')
         except Exception as e:
             print(">>>>> exception <<<<<", e)
