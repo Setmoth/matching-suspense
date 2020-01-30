@@ -12,7 +12,7 @@ from tempfile import mkdtemp
 from werkzeug.exceptions import default_exceptions, HTTPException, InternalServerError
 from werkzeug.security import check_password_hash, generate_password_hash
 
-from helpers import apology, login_required
+from helpers import login_required
 
 
 # Configure application
@@ -65,9 +65,6 @@ def index():
         cursor.execute('''SELECT rowid, * FROM import WHERE userid = ? AND processed = 'N' ORDER BY amount;''', params)
         #fixing decimals 
         rows = cursor.fetchall()
-        for row in rows:
-            for i in range(18):
-                print(i, row[i])
         return render_template("layout.html", rows=rows)
         
 @app.route("/import", methods=["GET", "POST"])
@@ -143,7 +140,6 @@ def login():
             print(">>>>> Redirect user to home page <<<<<")
             # Redirect user to home page
             flashMessage = "Welcome back, " + request.form.get("username")
-            #flash(flashMessage, 'error')
             flash(flashMessage, 'info')
             return redirect("/")
     # User reached route via GET (as by clicking a link or via redirect)
@@ -240,7 +236,9 @@ def errorhandler(e):
     """Handle error"""
     if not isinstance(e, HTTPException):
         e = InternalServerError()
-    return apology(e.name, e.code)
+        flashMessage = e.name + e.code)
+        flash(flashMessage, 'error')
+    return redirect("/logout")
 
 def processImport(data):
     # for each record store an entry in database (id+key shoul be unique)
@@ -347,18 +345,7 @@ def queryUserName():
     print(">>>>> queryUserName <<<<<")
 
     providedUsername = (request.form.get("username"),)
-    
-    print(">>>>> providedUsername <<<<<", providedUsername)
 
     cursor = db.cursor()
     rows = cursor.execute('''SELECT * FROM users WHERE username = ?''', providedUsername)
-    # db.commit()
-    
-    # rows = cursor.execute("""SELECT * FROM users WHERE username = %(username)s""", {'username': providedUsername})
-    #print(fetchone())
-    print("rows", rows)
-    #rows = cursor.fetchall()
-    # for row in cursor:
-        # print(">>>>> Hello row <<<<<", row)
-
     return rows
