@@ -12,7 +12,7 @@ from tempfile import mkdtemp
 from werkzeug.exceptions import default_exceptions, HTTPException, InternalServerError
 from werkzeug.security import check_password_hash, generate_password_hash
 
-from helpers import apology, login_required, eur
+from helpers import apology, login_required
 
 
 # Configure application
@@ -28,10 +28,6 @@ def after_request(response):
     response.headers["Expires"] = 0
     response.headers["Pragma"] = "no-cache"
     return response
-
-
-# Custom filter
-app.jinja_env.filters["eur"] = eur    
 
 
 # Configure session to use filesystem (instead of signed cookies)
@@ -67,7 +63,11 @@ def index():
         cursor = db.cursor()
         params = (session["user_id"],)
         cursor.execute('''SELECT rowid, * FROM import WHERE userid = ? AND processed = 'N' ORDER BY amount;''', params)
+        #fixing decimals 
         rows = cursor.fetchall()
+        for row in rows:
+            for i in range(18):
+                print(i, row[i])
         return render_template("layout.html", rows=rows)
         
 @app.route("/import", methods=["GET", "POST"])
@@ -268,7 +268,6 @@ def processImport(data):
                 csvAmount = row[4]
                 # numeric and two digits
                 csvAmount = float(csvAmount.replace(',', '.'))
-                print("csvAmount", csvAmount)
                 csvContraAccount = row[5]
                 csvContraAccountName = row[6]
                 csvValutaDate = row[7]

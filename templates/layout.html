@@ -69,8 +69,8 @@
                     <tr class="text-left">
                       <th>Processed</th>  
                       <th>Date</th>
-                      <th>Valuta</th>
                       <th>CR/DB</th>
+                      <th>Valuta</th>
                       <th>Amount</th>
                       <th>Payment Method</th>
                       <th>Description</th>
@@ -82,12 +82,15 @@
                          <tr class="text-left">
                             <td><input type="checkbox" id="{{ checkbox }}" name="checkbox" value="{{ rows[16] }}"></td>
                             <!-- <label for="{{ checkbox }}">{{ "Y" }}</label> -->
-                            <td>{{ rows[3] }}</td> <!-- Processed -->
-                            <td>{{ rows[4] }}</td> <!-- Date -->
-                            <td>{{ rows[5] }}</td> <!-- Valuta -->
-                            <td>{{ rows[6] }}</td> <!-- CR/DB -->
-                            <td>{{ rows[10] | eur }}</td> <!-- Amount-->
-                            <td>{{ rows[11] }}</td> <!-- payment description -->
+                            <!-- <td>{{ rows[0] }}</td> --> <!-- Processed -->
+                            <td>{{ rows[3] }}</td> <!-- Date -->
+                            <td>{{ rows[5] }}</td> <!-- CR/DB -->
+                            <td>{{ rows[4] }}</td> <!-- Valuta -->
+                            <!-- <td>{{ rows[10] }}</td> Amount
+                            <td>{{ '%0.2f'| format(rows[10]|float) }}</td> -->
+                            <td>{{ '%0.2f'| format(rows[6]|float) }}</td>
+                            <td>{{ rows[10] }}</td> <!-- payment method -->
+                            <td>{{ rows[11] }}</td> <!-- Description -->
                             <td>{{ rows[16] }}</td> <!-- reference -->
                          </tr>
                       {% endfor %}
