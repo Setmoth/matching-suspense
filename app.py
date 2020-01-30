@@ -14,7 +14,6 @@ from werkzeug.security import check_password_hash, generate_password_hash
 
 from helpers import login_required
 
-
 # Configure application
 app = Flask(__name__)
 
@@ -236,7 +235,7 @@ def errorhandler(e):
     """Handle error"""
     if not isinstance(e, HTTPException):
         e = InternalServerError()
-        flashMessage = e.name + e.code)
+        flashMessage = e.name + e.code
         flash(flashMessage, 'error')
     return redirect("/logout")
 
