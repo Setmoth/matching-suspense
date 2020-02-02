@@ -5,13 +5,13 @@ import io
 import sqlite3
 import csv
 import pandas as pd
- 
+
 from flask import Flask, flash, redirect, render_template, request, session
 from flask_session.__init__ import Session
 from tempfile import mkdtemp
 from werkzeug.exceptions import default_exceptions, HTTPException, InternalServerError
 from werkzeug.security import check_password_hash, generate_password_hash
-
+from waitress import serve
 from helpers import login_required
 
 # Configure application
@@ -77,18 +77,18 @@ def importCSV():
     if request.method == "POST":
         # Read CSV file
         print('>>>>> POST CSV <<<<<')
-        # if not request.files["fileX"]:
-        #     flash('Missing import file, please select a CSV-file from your computer', 'danger')
-        #     return render_template("import.html") 
-        # try:
-        #     data = pd.read_csv(request.files["fileX"], sep=";")
-        #     print('>>>>> STORE ROWS IN DB<<<<<')
-        #     processImport(data)
-        #     print('>>>>> DONE STORING ROWS IN DB<<<<<')
-        #     flash('Transactions are stored, you can now process them', 'success')
-        # except Exception as e:
-        #     print(">>>>> exception <<<<<", e)
-        #     flash('Invalid file or a database error, send an email to slackbyte8@gmail.com', 'danger')
+        if not request.files["fileX"]:
+            flash('Missing import file, please select a CSV-file from your computer', 'danger')
+            return render_template("import.html") 
+        try:
+            data = pd.read_csv(request.files["fileX"], sep=";")
+            print('>>>>> STORE ROWS IN DB<<<<<')
+            processImport(data)
+            print('>>>>> DONE STORING ROWS IN DB<<<<<')
+            flash('Transactions are stored, you can now process them', 'success')
+        except Exception as e:
+            print(">>>>> exception <<<<<", e)
+            flash('Invalid file or a database error, send an email to slackbyte8@gmail.com', 'danger')
         return redirect("/")
     else:
         print(">>> /GET <<<")
@@ -240,8 +240,13 @@ def errorhandler(e):
         e = InternalServerError()
         flashMessage = e.name + e.code
         flash(flashMessage, 'error')
-    print("flashMessage:", flashMessage)
+        print("flashMessage:", flashMessage)
     return redirect("/logout")
+
+
+if __name__ == "__main__":
+   #app.run() ##Replaced with below code to run it using waitress 
+   serve(app, host='0.0.0.0', port=8000)    
 
 def processImport(data):
     # for each record store an entry in database (id+key shoul be unique)
