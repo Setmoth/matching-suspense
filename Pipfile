@@ -9,7 +9,6 @@ verify_ssl = true
 gunicorn = "*"
 flask = "*" 
 flask_session = "*" 
-pandas = "*"
 
 [requires]
 python_version = "3.7"
