@@ -240,6 +240,7 @@ def errorhandler(e):
         e = InternalServerError()
         flashMessage = e.name + e.code
         flash(flashMessage, 'error')
+    print("flashMessage:", flashMessage)
     return redirect("/logout")
 
 def processImport(data):
