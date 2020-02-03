@@ -38,7 +38,7 @@ Session(app)
 # Configure CS50 Library to use SQLite database
 #db = SQL("sqlite:///finance.db")
 print(">>>>> HELLO WORLD >>>>>")
-db = sqlite3.connect('db/matching.db')
+db = sqlite3.connect('db/matching.db', check_same_thread=False)
 
 
 @app.route("/", methods=["GET", "POST"])
