@@ -246,7 +246,8 @@ def errorhandler(e):
 
 if __name__ == "__main__":
    #app.run() ##Replaced with below code to run it using waitress 
-   serve(app, host='0.0.0.0', port=8000)    
+   print('>>>>> WAITRESS <<<<<')
+   serve(app, host='127.0.0.1', port=5000)    
 
 def processImport(data):
     # for each record store an entry in database (id+key shoul be unique)
