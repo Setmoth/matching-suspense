@@ -5,11 +5,23 @@
 {% endblock %}
 
 {% block main %}
-<p>Q: What CSV-encoding is used?</p>
-<p>A: utf-8 & ascii are tested</p>
-<br>
-<p>Q: What is the layout of the CSV?</p>
-<p>A: account number / transaction date (format 99-99-99) / valuta code - no validation / credit debet (C or D)/ amount / counter account /  counter account holder / valuta date / payment method / description / payment type / authorization number /  collector ID / address / reference / book date </p>
-<p>Reference is a unique identifier, accounts will be imported only, when a unique identifier has been provided</p>
+<table id="roster" class="table table-striped table-hover" style="width:100%">
+	<h1>Questions & Answers</h1>
+	<br>
 
+	<tbody>
+		<tr class="text-left">
+			<td>Q: What CSV-encoding is used?<br>A: utf-8 & ascii are tested</td>
+		</tr>
+		<tr class="text-left">
+			<td>Q: What is the layout of the CSV?<br>A: account number (IBAN-format) / transaction date (format 99-99-99) / valuta code - no validation / credit debet (C or D)/ amount / counter account /  counter account holder / valuta date / payment method / description / payment type / authorization number /  collector ID / address / reference / book date </td>
+		</tr>
+		<tr class="text-left">	
+			<td>Q: What is the Reference used for?<br>A: Reference is a unique identifier, accounts will be imported only, when a unique identifier has been provided</td>
+		</tr>
+		<tr class="text-left">	
+			<td>Q: Which banks are currently supported?<br>A: Currently the CSV-format used, is that of the Dutch bank KNAB.</td>
+		</tr>
+	</tbody>
+</table>	
 {% endblock %}
