@@ -72,9 +72,9 @@
                       <th>CR/DB</th>
                       <th>Valuta</th>
                       <th>Amount</th>
-                      <th>Payment Method</th>
                       <th>Description</th>
-                      <th>Reference</th>
+                      <th>Contra account number</th>
+                      <th>Contra account</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -86,12 +86,10 @@
                             <td>{{ rows[3] }}</td> <!-- Date -->
                             <td>{{ rows[5] }}</td> <!-- CR/DB -->
                             <td>{{ rows[4] }}</td> <!-- Valuta -->
-                            <!-- <td>{{ rows[10] }}</td> Amount
-                            <td>{{ '%0.2f'| format(rows[10]|float) }}</td> -->
                             <td>{{ '%0.2f'| format(rows[6]|float) }}</td>
-                            <td>{{ rows[10] }}</td> <!-- payment method -->
                             <td>{{ rows[11] }}</td> <!-- Description -->
-                            <td>{{ rows[16] }}</td> <!-- reference -->
+                            <td>{{ rows[7] }}</td> <!-- contra account number -->
+                            <td>{{ rows[8] }}</td> <!-- contra account Name-->
                          </tr>
                       {% endfor %}
                       <br>
